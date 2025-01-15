@@ -1,0 +1,40 @@
+diff --git a/contracts/core/EntryPoint.sol b/contracts/core/EntryPoint.sol
+index 058d8eb..8953da2 100644
+--- a/contracts/core/EntryPoint.sol
++++ b/contracts/core/EntryPoint.sol
+@@ -108,7 +108,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+             assembly ("memory-safe") {
+                 success := call(gas(), address(), 0, add(innerCall, 0x20), mload(innerCall), 0, 32)
+                 collected := mload(0)
+-                mstore(0x40, saveFreePtr)
++                // mstore(0x40, saveFreePtr) // make analysis succeed, no-op
+             }
+         }
+         if (!success) {
+@@ -299,7 +299,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+         MemoryUserOp mUserOp;
+         bytes32 userOpHash;
+         uint256 prefund;
+-        uint256 contextOffset;
++        bytes contextOffset; // make analysis succeed, no-op
+         uint256 preOpGas;
+     }
+ 
+@@ -780,7 +780,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+      */
+     function getOffsetOfMemoryBytes(
+         bytes memory data
+-    ) internal pure returns (uint256 offset) {
++    ) internal pure returns (bytes memory offset /* make analysis succeed, no-op */) {
+         assembly {
+             offset := data
+         }
+@@ -791,7 +791,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+      * @param offset - The offset to get the bytes from.
+      */
+     function getMemoryBytesFromOffset(
+-        uint256 offset
++        bytes memory offset // make analysis succeed, no-op
+     ) internal pure returns (bytes memory data) {
+         assembly ("memory-safe") {
+             data := offset
