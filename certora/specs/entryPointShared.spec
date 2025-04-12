@@ -26,7 +26,10 @@ methods {
         bytes signature
     ) external => NONDET;
     function EntryPoint.getUserOpHash(EntryPoint.PackedUserOperation calldata) internal returns bytes32 => NONDET;
-
+    function _callValidatePaymasterUserOp(
+        uint256 opIndex,
+        EntryPoint.PackedUserOperation calldata op,
+        EntryPoint.UserOpInfo memory opInfo) internal returns (bytes memory, uint256) => cvlCallValidatePaymasterUserOp(opIndex, op, opInfo, executingContract);
 
     function balanceOf(address) external returns (uint256) envfree;
     function _compensate(address beneficiary, uint256 amount) internal  => NONDET;
@@ -43,7 +46,7 @@ methods {
         uint256 actualUserOpFeePerGas
     ) external => NONDET;
 
-    function calldataKeccak(bytes calldata data) internal returns bytes32 => keccak256(data);
+    function _.calldataKeccak(bytes calldata data) internal => keccak256(data) expect bytes32;
 
     function EntryPoint.innerHandleOp(
         bytes, 
@@ -54,8 +57,8 @@ methods {
     
 
     // optimizations
-    function emitUserOperationEvent(EntryPoint.UserOpInfo memory opInfo, bool success, uint256 actualGasCost, uint256 actualGas) internal => NONDET;
-    function emitPrefundTooLow(EntryPoint.UserOpInfo memory opInfo) internal => NONDET;
+    function _emitUserOperationEvent(EntryPoint.UserOpInfo memory opInfo, bool success, uint256 actualGasCost, uint256 actualGas) internal => NONDET;
+    function _emitPrefundTooLow(EntryPoint.UserOpInfo memory opInfo) internal => NONDET;
     function Exec.getReturnData(uint256) internal returns (bytes memory) => nondetBytes();
 
 }
@@ -84,6 +87,19 @@ function execCallSummary(address to, uint256 value, bytes data, uint256 txGas) r
     return result;
 }
 
+function cvlCallValidatePaymasterUserOp(uint256 opIndex, EntryPoint.PackedUserOperation op, EntryPoint.UserOpInfo opInfo, address executing) returns (bytes, uint256) {
+    // if we ever want to model it, note the call should be nondet'd anyway:
+    /*
+    EntryPoint.MemoryUserOp mUserOp = opInfo.mUserOp;
+    address paymaster = mUserOp.paymaster;
+    env e;
+    require e.msg.sender == executing;
+    return paymaster.validatePaymasterUserOp(e, op, opInfo.userOpHash, opInfo.prefund);
+    */
+    bytes context;
+    uint256 validationData;
+    return (context, validationData);
+}
 
 function limitPerAggregatorOps(IEntryPoint.UserOpsPerAggregator[] op, uint idx, uint subsz) {
     require op[idx].userOps.length == subsz;
