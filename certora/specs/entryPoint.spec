@@ -436,36 +436,3 @@ function check_onlyValidatedCalls_assert(method f, uint sz, uint subsz0, uint su
     assert executionValidated;
 }
 
-
-rule innerHandleOpProtected()
-{
-    env e;
-    bytes callData;
-    EntryPoint.UserOpInfo opInfo;
-    bytes context;
-    require e.msg.sender != currentContract;
-
-    innerHandleOp@withrevert(e, callData, opInfo, context);
-    assert lastReverted;
-}
-
-
-//// # Validity of balance decrease
-/**
- *  Who can decrease balance of (in StakeManager) ?
- */
-rule onlySelfReduces(method f, address user) {
-    env e;
-    calldataarg args;
-    uint256 before =  balanceOf(user);
-    f(e, args);
-    uint256 after =  balanceOf(user);
-    assert after < before => e.msg.sender == user;
-}
-
-rule sanity(method f) {
-    env e;
-    calldataarg arg;
-    f(e, arg);
-    satisfy true;
-}

@@ -1,0 +1,13 @@
+diff --git a/contracts/core/EntryPoint.sol b/contracts/core/EntryPoint.sol
+index 7c2ddce..4e9d416 100644
+--- a/contracts/core/EntryPoint.sol
++++ b/contracts/core/EntryPoint.sol
+@@ -46,7 +46,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+     // Threshold below which no penalty would be charged
+     uint256 private constant PENALTY_GAS_THRESHOLD = 40000;
+ 
+-    SenderCreator private immutable _senderCreator = new SenderCreator();
++    SenderCreator private immutable _senderCreator;
+ 
+     string constant internal DOMAIN_NAME = "ERC4337";
+     string constant internal DOMAIN_VERSION = "1";

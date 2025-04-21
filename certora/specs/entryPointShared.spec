@@ -57,6 +57,7 @@ methods {
     
 
     // optimizations
+    function _.calldataKeccak(bytes calldata data) internal => keccak256(data) expect bytes32;
     function _emitUserOperationEvent(EntryPoint.UserOpInfo memory opInfo, bool success, uint256 actualGasCost, uint256 actualGas) internal => NONDET;
     function _emitPrefundTooLow(EntryPoint.UserOpInfo memory opInfo) internal => NONDET;
     function Exec.getReturnData(uint256) internal returns (bytes memory) => nondetBytes();
