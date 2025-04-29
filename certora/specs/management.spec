@@ -321,6 +321,7 @@ use builtin rule hasDelegateCalls filtered { f -> f.selector != sig:delegateAndR
 use builtin rule msgValueInLoopRule;
 use builtin rule sanity filtered { f -> !alwaysReverting(f) }
 
+use rule alwaysRevert;
 
 //// # Advanced multi-parametric rules
 

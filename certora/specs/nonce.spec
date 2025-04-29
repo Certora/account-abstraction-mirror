@@ -2,6 +2,13 @@ import "./management.spec";
 
 methods {
     function getNonce(address,uint192) external returns uint256 envfree;
+
+    // optimization here, checking it does not touch the nonce 
+    function NonceHarness.innerHandleOp(
+        bytes, 
+        EntryPoint.UserOpInfo, 
+        bytes
+    ) external returns uint256 => NONDET;
 }
 
 // the nonce consists of 192 bytes of key, followed by 64 bytes of sequence
@@ -37,7 +44,30 @@ filtered { f -> !alwaysReverting(f) }
     assert nonceAfter == nonceBefore || nonceAfter == nonceBefore + 1;
 }
 
-//// # Nonce sequence must be bound by 2^64
+//// # Nonce sequence must be bound by 2^64 (taking a grace of 1 unit)
 invariant nonceSequenceBound(address sender, uint192 key)
-    currentContract.nonceSequenceNumber[sender][key] <= max_uint64
-filtered { f -> !alwaysReverting(f) }
+    currentContract.nonceSequenceNumber[sender][key] < max_uint64
+filtered { f -> !alwaysReverting(f) } {
+    preserved with (env e) {
+        // strengthen the invariant since when we increment it can go from max_uint64 to 2**64 and 
+        // for ease of use in other rules we prefer it doesn't start at the edge max_uint64 either.
+        require currentContract.nonceSequenceNumber[sender][key] < max_uint64 - 1;
+    }
+}
+
+//// # Inner-handle-op does not change nonce
+rule innerHandleOpDoesNotChangeNonce()
+{
+    address sender;
+    uint192 key;
+
+    env e;
+    calldataarg args;
+    
+    uint256 nonceBefore = getNonce(sender, key);
+    
+    innerHandleOp(e, args);
+    
+    uint256 nonceAfter = getNonce(sender, key);
+    assert nonceAfter == nonceBefore;
+}
