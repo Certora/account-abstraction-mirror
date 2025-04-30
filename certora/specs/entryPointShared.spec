@@ -46,8 +46,6 @@ methods {
         uint256 actualUserOpFeePerGas
     ) external => NONDET;
 
-    function _.calldataKeccak(bytes calldata data) internal => keccak256(data) expect bytes32;
-
     function EntryPoint.innerHandleOp(
         bytes, 
         EntryPoint.UserOpInfo, 

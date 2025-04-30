@@ -1,6 +1,7 @@
 import "./management.spec";
 
 methods {
+    // mark getNonce as envfree
     function getNonce(address,uint192) external returns uint256 envfree;
 
     // optimization here, checking it does not touch the nonce 
@@ -9,20 +10,44 @@ methods {
         EntryPoint.UserOpInfo, 
         bytes
     ) external returns uint256 => NONDET;
+    function EntryPoint._executeUserOp(
+        uint256 opIndex,
+        EntryPoint.PackedUserOperation calldata userOp,
+        EntryPoint.UserOpInfo memory opInfo
+    ) internal returns (uint256) => NONDET;
+    function EntryPoint._validateAccountAndPaymasterValidationData(
+        uint256 opIndex,
+        uint256 validationData,
+        uint256 paymasterValidationData,
+        address expectedAggregator
+    ) internal => NONDET; // view function, no need to check if it updates nonce
+}
+
+function impossible() returns uint256 {
+    assert false;
+    // unreachable, cvl fluke
+    uint i;
+    return i;
+}
+
+function nonceKey(uint256 nonce) returns uint192 {
+    return assert_uint192(nonce >> 64);
 }
 
 // the nonce consists of 192 bytes of key, followed by 64 bytes of sequence
-
 // question: why the sequence number is 256 bits and not 64?
 
-//// # Validate and update nonce returns true on current nonce
+//// # Validate and update nonce returns true on current nonce only
 rule nonceValidation() {
     env e;
     address sender;
     uint192 key;
     requireInvariant nonceSequenceBound(sender, key);
     require currentContract.nonceSequenceNumber[sender][key] > 0; // incremented at least once
-    assert validateAndUpdateNonce(e, sender, require_uint256(getNonce(sender, key)));
+    uint256 maybeNonce;
+    require nonceKey(maybeNonce) == key;
+    // for a certain sender and key, validateAndUpdateNonce is only successful on the current sequence number
+    assert maybeNonce == getNonce(sender, key) <=> validateAndUpdateNonce(e, sender, maybeNonce);
 }
 
 //// # Nonce is monotone increasing
@@ -67,6 +92,23 @@ rule innerHandleOpDoesNotChangeNonce()
     uint256 nonceBefore = getNonce(sender, key);
     
     innerHandleOp(e, args);
+    
+    uint256 nonceAfter = getNonce(sender, key);
+    assert nonceAfter == nonceBefore;
+}
+
+//// # execute-user-op does not change nonce
+rule executeUserOpDoesNotChangeNonce() 
+{
+    address sender;
+    uint192 key;
+
+    env e;
+    calldataarg args;
+    
+    uint256 nonceBefore = getNonce(sender, key);
+    
+    executeUserOp(e, args);
     
     uint256 nonceAfter = getNonce(sender, key);
     assert nonceAfter == nonceBefore;
