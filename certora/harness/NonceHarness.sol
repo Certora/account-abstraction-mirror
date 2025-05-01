@@ -12,8 +12,4 @@ contract NonceHarness is EntryPoint {
     ) external returns (uint256) {
         return _executeUserOp(opIndex, userOp, opInfo); 
     }
-
-    function testBalloon() external {
-        getNonce(msg.sender, 0);
-    }
 }

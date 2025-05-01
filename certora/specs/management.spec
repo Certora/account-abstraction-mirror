@@ -100,6 +100,7 @@ filtered { f -> !alwaysReverting(f) && !coreOperations(f) }
     assert after < before => e.msg.sender == user;
 }
 
+//// ## Can always withdraw deposits up to max, if receiver does not reject the funds
 rule withdrawalMustSucceed() {
     address to;
     uint256 amount;
@@ -111,7 +112,8 @@ rule withdrawalMustSucceed() {
     assert (amount <= currentContract.deposits[e.msg.sender].deposit && e.msg.value == 0 && !saw_failing_call) => succeeded;
 }
 
-rule withdrawalIsAdditive() {
+//// ## Withdrawals are additive and right amounts are withdrawn
+rule withdrawalIsAdditive(bool direction) {
     requireInvariant depositsAndStakesLessThanMaxEthSupply();
     require forall address u. mirrorDeposits[u] <= sumDeposits;
 
@@ -130,20 +132,39 @@ rule withdrawalIsAdditive() {
     require e2.msg.sender == user; 
     require e3.msg.sender == user;
 
+    bool isEntryPoint = user == currentContract; /* weird edge cases happen if the EntryPoint could withdraw */
+
     uint256 initialDeposit = currentContract.deposits[user].deposit;
 
     storage init = lastStorage;
-    withdrawTo(e1, to1, amount1);
-    withdrawTo(e2, to2, amount2);
-    uint256 finalDeposit1 = currentContract.deposits[user].deposit;
+    uint256 finalDeposit1;
+    uint256 finalDeposit2;
+    bool succeeded;
+    if (direction) {
+        withdrawTo(e1, to1, amount1);
+        withdrawTo(e2, to2, amount2);
+        finalDeposit1 = currentContract.deposits[user].deposit;
+        assert !isEntryPoint => initialDeposit-finalDeposit1 == amount1+amount2;
 
-    withdrawTo@withrevert(e3, to3, amount3) at init;
-    bool succeeded = !lastReverted;
-    uint256 finalDeposit2 = currentContract.deposits[user].deposit;
+        withdrawTo@withrevert(e3, to3, amount3) at init;
+        succeeded = !lastReverted;
+        finalDeposit2 = currentContract.deposits[user].deposit;
+        assert (succeeded && !isEntryPoint) => initialDeposit-finalDeposit2 == amount3;
+    } else {
+        withdrawTo(e3, to3, amount3) ;
+        finalDeposit1 = currentContract.deposits[user].deposit;
+        assert !isEntryPoint => initialDeposit-finalDeposit1 == amount3;
 
-    bool isEntryPoint = user == currentContract; /* weird edge cases happen if the EntryPoint could withdraw */
-    assert !isEntryPoint => (amount3 == amount1+amount2 && e3.msg.value == 0 && !saw_failing_call) => succeeded;
-    assert !isEntryPoint => initialDeposit-finalDeposit1 == amount1+amount2;
+        withdrawTo@withrevert(e1, to1, amount1) at init;
+        bool succeeded1 = !lastReverted;
+        withdrawTo@withrevert(e2, to2, amount2);
+        succeeded = succeeded1 && !lastReverted;
+        finalDeposit2 = currentContract.deposits[user].deposit;
+        assert (succeeded && !isEntryPoint) => initialDeposit-finalDeposit2 == amount1+amount2;
+
+    }
+
+    assert !isEntryPoint => (amount3 == amount1+amount2 && e1.msg.value == 0 && e2.msg.value == 0 && e3.msg.value == 0 && !saw_failing_call) => succeeded;
     assert succeeded => amount3 <= initialDeposit;
 }
 
