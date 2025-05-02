@@ -231,9 +231,9 @@ invariant stakePositiveIffUnstakeDelayIsPositive(address a)
 filtered { f -> !alwaysReverting(f) }
 
 /**
- * State no-stake: stake==0, unstakeDelaySec==0, staked==false, withdrawTime==0
- * State locked: stake > 0, unstakeDelaySec > 0, staked==true, withdrawTime == 0
- * State unlocked pending: stake > 0, unstakeDelaySec > 0, staked==false, withdrawTime > 0
+ * State no-stake: stake == 0, unstakeDelaySec == 0, staked == false, withdrawTime == 0
+ * State locked: stake > 0, unstakeDelaySec > 0, staked == true, withdrawTime == 0
+ * State unlocked pending: stake > 0, unstakeDelaySec > 0, staked == false, withdrawTime > 0
  */
 function isNoStakeState(address a) returns bool { return (currentContract.deposits[a].stake == 0 && currentContract.deposits[a].unstakeDelaySec == 0 && currentContract.deposits[a].staked == false && currentContract.deposits[a].withdrawTime == 0); }
 

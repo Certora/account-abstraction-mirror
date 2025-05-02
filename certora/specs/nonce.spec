@@ -23,13 +23,6 @@ methods {
     ) internal => NONDET; // view function, no need to check if it updates nonce
 }
 
-function impossible() returns uint256 {
-    assert false;
-    // unreachable, cvl fluke
-    uint i;
-    return i;
-}
-
 function nonceKey(uint256 nonce) returns uint192 {
     return assert_uint192(nonce >> 64);
 }
