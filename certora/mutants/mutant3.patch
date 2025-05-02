@@ -1,0 +1,13 @@
+diff --git a/contracts/core/EntryPoint.sol b/contracts/core/EntryPoint.sol
+index 7c2ddce..59b2fca 100644
+--- a/contracts/core/EntryPoint.sol
++++ b/contracts/core/EntryPoint.sol
+@@ -120,7 +120,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+ 
+             uint256 collected = 0;
+             opIndex = 0;
+-            for (uint256 a = 0; a < opasLen; a++) {
++            for (uint256 a = 0; a < opasLen-1; a++) {
+                 UserOpsPerAggregator calldata opa = opsPerAggregator[a];
+                 emit SignatureAggregatorChanged(address(opa.aggregator));
+                 PackedUserOperation[] calldata ops = opa.userOps;
