@@ -29,7 +29,7 @@ methods {
     function _callValidatePaymasterUserOp(
         uint256 opIndex,
         EntryPoint.PackedUserOperation calldata op,
-        EntryPoint.UserOpInfo memory opInfo) internal returns (bytes memory, uint256) => cvlCallValidatePaymasterUserOp(opIndex, op, opInfo, executingContract);
+        EntryPoint.UserOpInfo memory opInfo) internal returns (bytes memory, uint256) => cvlCallValidatePaymasterUserOp();
 
     function balanceOf(address) external returns (uint256) envfree;
     function _compensate(address beneficiary, uint256 amount) internal  => NONDET;
@@ -86,7 +86,7 @@ function execCallSummary(address to, uint256 value, bytes data, uint256 txGas) r
     return result;
 }
 
-function cvlCallValidatePaymasterUserOp(uint256 opIndex, EntryPoint.PackedUserOperation op, EntryPoint.UserOpInfo opInfo, address executing) returns (bytes, uint256) {
+function cvlCallValidatePaymasterUserOp() returns (bytes, uint256) {
     // if we ever want to model it, note the call should be nondet'd anyway:
     /*
     EntryPoint.MemoryUserOp mUserOp = opInfo.mUserOp;

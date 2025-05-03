@@ -10,7 +10,7 @@ methods {
     function EntryPoint._callValidatePaymasterUserOp(
         uint256 opIndex,
         EntryPoint.PackedUserOperation calldata op,
-        EntryPoint.UserOpInfo memory opInfo) internal returns (bytes memory, uint256) => cvlCallValidatePaymasterUserOp(opIndex, op, opInfo, executingContract);
+        EntryPoint.UserOpInfo memory opInfo) internal returns (bytes memory, uint256) => cvlCallValidatePaymasterUserOp();
 
 }
 
@@ -19,7 +19,7 @@ function nondetBytes() returns bytes {
     return b;
 }
 
-function cvlCallValidatePaymasterUserOp(uint256 opIndex, EntryPoint.PackedUserOperation op, EntryPoint.UserOpInfo opInfo, address executing) returns (bytes, uint256) {
+function cvlCallValidatePaymasterUserOp() returns (bytes, uint256) {
     bytes context;
     uint256 validationData;
     return (context, validationData);

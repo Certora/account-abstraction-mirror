@@ -4,8 +4,18 @@ persistent ghost mathint prevNumExecuted;
 
 persistent ghost bool inputCalldataLengthIsZero;
 
+persistent ghost mathint minimalGas;
+
 hook REVERT(uint offset, uint size) {
     assert numExecuted == prevNumExecuted + 1 || inputCalldataLengthIsZero;
+}
+
+hook GAS uint g {
+    if (numExecuted == prevNumExecuted) {
+        require g < 2^250; // sane bound to avoid overflow
+        // did not execute yet, assume there was enough gas
+        require g*63/64 >= minimalGas;
+    }
 }
 
 function cvlInnerHandleOp(env e) returns uint256 {
