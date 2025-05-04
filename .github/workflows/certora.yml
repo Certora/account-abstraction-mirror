@@ -24,8 +24,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Run patches
+        run: |
+          git apply certora/patch/prover_optimization.patch
+          git apply certora/patch/senderCreatorMunge.patch
       - name: Account abstraction Rules
-        uses: ./
+        uses: Certora/certora-run-action@v1
         with:
           configurations: |-
             certora/conf/management.conf
