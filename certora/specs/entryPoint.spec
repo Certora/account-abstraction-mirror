@@ -1,4 +1,5 @@
 import "./entryPointShared.spec";
+import "./alwaysRevert.spec";
 
 methods {
     unresolved external in _._ => DISPATCH [
@@ -28,12 +29,10 @@ function cvlInnerHandleOp(env e) returns uint256 {
 
 /* everything but handle*Ops functions*/
 rule onlyValidatedCalls_NonHandleOps(method f) 
-filtered { f -> !isHandleOps(f) }
+filtered { f -> !isHandleOps(f) && !alwaysReverting(f) }
 {
     // check only entrypoint
     require f.contract == entryPoint;
-    // delegateAndRevert should always revert anyway, filter out
-    require f.selector != sig:delegateAndRevert(address,bytes).selector;
     // innerHandleOp is... inner!
     require f.selector != sig:EntryPoint.innerHandleOp(bytes,EntryPoint.UserOpInfo,bytes).selector;
     check_onlyValidatedCalls_assert(f, 100, 100, 100, 100);
