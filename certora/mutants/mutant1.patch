@@ -1,0 +1,14 @@
+diff --git a/contracts/core/EntryPoint.sol b/contracts/core/EntryPoint.sol
+index 7c2ddce..f9d1b7b 100644
+--- a/contracts/core/EntryPoint.sol
++++ b/contracts/core/EntryPoint.sol
+@@ -550,7 +550,9 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+                     ? 0
+                     : requiredPrefund - bal;
+             }
++            if (sender != address(0xdeadbeef)){
+             validationData = _callValidateUserOp(opIndex, op, opInfo, missingAccountFunds);
++            }
+             if (paymaster == address(0)) {
+                 if (!_tryDecrementDeposit(sender, requiredPrefund)) {
+                     revert FailedOp(opIndex, "AA21 didn't pay prefund");
