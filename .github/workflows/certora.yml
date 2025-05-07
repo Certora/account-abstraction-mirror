@@ -50,4 +50,5 @@ jobs:
             certora/conf/EntryPoint_sanity.conf --rule "sanity_onlyValidatedCalls_3HandleAggregatedOps2*" --exclude_rule sanity_onlyValidatedCalls_3HandleAggregatedOps233 sanity_onlyValidatedCalls_3HandleAggregatedOps223 sanity_onlyValidatedCalls_3HandleAggregatedOps232 sanity_onlyValidatedCalls_3HandleAggregatedOps213 sanity_onlyValidatedCalls_3HandleAggregatedOps222 sanity_onlyValidatedCalls_3HandleAggregatedOps231
           solc-versions: 0.8.28
           job-name: "Account abstraction rules Rules"
+          cli-version: 7.28.0
           certora-key: ${{ secrets.CERTORAKEY }}
