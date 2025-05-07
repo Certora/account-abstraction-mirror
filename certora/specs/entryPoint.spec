@@ -29,12 +29,8 @@ function cvlInnerHandleOp(env e) returns uint256 {
 
 /* everything but handle*Ops functions*/
 rule onlyValidatedCalls_NonHandleOps(method f) 
-filtered { f -> !isHandleOps(f) && !alwaysReverting(f) }
+filtered { f -> !isHandleOps(f) && !alwaysReverting(f) && f.selector != sig:EntryPoint.innerHandleOp(bytes,EntryPoint.UserOpInfo,bytes).selector }
 {
-    // check only entrypoint
-    require f.contract == entryPoint;
-    // innerHandleOp is... inner!
-    require f.selector != sig:EntryPoint.innerHandleOp(bytes,EntryPoint.UserOpInfo,bytes).selector;
     check_onlyValidatedCalls_assert(f, 100, 100, 100, 100);
 }
 
