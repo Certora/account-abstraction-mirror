@@ -4,10 +4,11 @@ on:
   push:
     branches:
       - main
-      - shelly/stakeSpecs
+      - develop
   pull_request:
     branches:
       - main
+      - develop
       - v*
   workflow_dispatch:
 
