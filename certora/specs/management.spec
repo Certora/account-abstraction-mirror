@@ -132,7 +132,7 @@ rule withdrawalIsAdditive(bool direction) {
     require e2.msg.sender == user; 
     require e3.msg.sender == user;
 
-    bool isEntryPoint = user == currentContract; /* weird edge cases happen if the EntryPoint could withdraw */
+    bool isEntryPoint = user == currentContract; /* weird edge cases happen if the EntryPoint could trigger a withdraw, which isn't possible */
 
     uint256 initialDeposit = currentContract.deposits[user].deposit;
 
@@ -378,7 +378,7 @@ filtered { f -> !alwaysReverting(f) && !coreOperations(f) && !f.isView , g -> !a
     bool succeeded = !lastReverted;
 
     require eF.msg.sender != eG.msg.sender; // only interesting if another user front-runs us
-    // We know that having the entrypoint call functions leads to weird behaviors already
+    // We know that having the entrypoint call functions leads to weird behaviors already, and it's impossible for it to do so
     require eF.msg.sender != currentContract; 
     require eG.msg.sender != currentContract;
     require beneficiaryF != currentContract;
@@ -434,7 +434,7 @@ filtered { f -> !alwaysReverting(f) && !coreOperations(f) && !f.isView , g -> !a
     }
     bool fFailedSecondTime = lastReverted;
 
-    // We know that having the entrypoint call functions leads to weird behaviors already
+    // We know that having the entrypoint call functions leads to weird behaviors already, and it's impossible for it to do so
     require eF.msg.sender != currentContract; 
     require eG.msg.sender != currentContract;
     // if we are trying to add stake, we cannot expect to front-run adding a 0 stake by adding stake...

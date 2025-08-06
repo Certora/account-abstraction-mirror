@@ -1,0 +1,163 @@
+diff --git a/certora/specs/management.spec b/certora/specs/management.spec
+index 0822c8a..6e8fb1f 100644
+--- a/certora/specs/management.spec
++++ b/certora/specs/management.spec
+@@ -132,7 +132,7 @@ rule withdrawalIsAdditive(bool direction) {
+     require e2.msg.sender == user; 
+     require e3.msg.sender == user;
+ 
+-    bool isEntryPoint = user == currentContract; /* weird edge cases happen if the EntryPoint could withdraw */
++    bool isEntryPoint = user == currentContract; /* weird edge cases happen if the EntryPoint could trigger a withdraw, which isn't possible */
+ 
+     uint256 initialDeposit = currentContract.deposits[user].deposit;
+ 
+@@ -378,7 +378,7 @@ filtered { f -> !alwaysReverting(f) && !coreOperations(f) && !f.isView , g -> !a
+     bool succeeded = !lastReverted;
+ 
+     require eF.msg.sender != eG.msg.sender; // only interesting if another user front-runs us
+-    // We know that having the entrypoint call functions leads to weird behaviors already
++    // We know that having the entrypoint call functions leads to weird behaviors already, and it's impossible for it to do so
+     require eF.msg.sender != currentContract; 
+     require eG.msg.sender != currentContract;
+     require beneficiaryF != currentContract;
+@@ -434,7 +434,7 @@ filtered { f -> !alwaysReverting(f) && !coreOperations(f) && !f.isView , g -> !a
+     }
+     bool fFailedSecondTime = lastReverted;
+ 
+-    // We know that having the entrypoint call functions leads to weird behaviors already
++    // We know that having the entrypoint call functions leads to weird behaviors already, and it's impossible for it to do so
+     require eF.msg.sender != currentContract; 
+     require eG.msg.sender != currentContract;
+     // if we are trying to add stake, we cannot expect to front-run adding a 0 stake by adding stake...
+diff --git a/contracts/core/EntryPoint.sol b/contracts/core/EntryPoint.sol
+index 7c2ddce..d10e040 100644
+--- a/contracts/core/EntryPoint.sol
++++ b/contracts/core/EntryPoint.sol
+@@ -46,7 +46,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+     // Threshold below which no penalty would be charged
+     uint256 private constant PENALTY_GAS_THRESHOLD = 40000;
+ 
+-    SenderCreator private immutable _senderCreator = new SenderCreator();
++    SenderCreator private immutable _senderCreator;
+ 
+     string constant internal DOMAIN_NAME = "ERC4337";
+     string constant internal DOMAIN_VERSION = "1";
+@@ -67,7 +67,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+             uint256 collected = 0;
+             emit BeforeExecution();
+ 
+-            for (uint256 i = 0; i < opslen; i++) {
++            for (uint256 i = opslen - 1; i >= 0; i--) {
+                 collected += _executeUserOp(i, ops[i], opInfos[i]);
+             }
+ 
+@@ -209,7 +209,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+         bytes memory context = _getMemoryBytesFromOffset(opInfo.contextOffset);
+         bool success;
+         {
+-            uint256 saveFreePtr = _getFreePtr();
++            // uint256 saveFreePtr = _getFreePtr();
+             bytes calldata callData = userOp.callData;
+             bytes memory innerCall;
+             bytes4 methodSig;
+@@ -230,7 +230,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+                 success := call(gas(), address(), 0, add(innerCall, 0x20), mload(innerCall), 0, 32)
+                 collected := mload(0)
+             }
+-            _restoreFreePtr(saveFreePtr);
++            // _restoreFreePtr(saveFreePtr);
+         }
+         if (!success) {
+             bytes32 innerRevertCode;
+@@ -253,14 +253,14 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+                 _emitUserOperationEvent(opInfo, false, actualGasCost, actualGas);
+                 collected = actualGasCost;
+             } else {
+-                uint256 freePtr = _getFreePtr();
++                // uint256 freePtr = _getFreePtr();
+                 emit PostOpRevertReason(
+                     opInfo.userOpHash,
+                     opInfo.mUserOp.sender,
+                     opInfo.mUserOp.nonce,
+                     Exec.getReturnData(REVERT_REASON_MAX_LEN)
+                 );
+-                _restoreFreePtr(freePtr);
++                // _restoreFreePtr(freePtr);
+ 
+                 uint256 actualGas = preGas - gasleft() + opInfo.preOpGas;
+                 collected = _postExecution(
+@@ -361,7 +361,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+         MemoryUserOp mUserOp;
+         bytes32 userOpHash;
+         uint256 prefund;
+-        uint256 contextOffset;
++        bytes contextOffset;
+         uint256 preOpGas;
+     }
+ 
+@@ -402,7 +402,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+         if (callData.length > 0) {
+             bool success = Exec.call(mUserOp.sender, 0, callData, callGasLimit);
+             if (!success) {
+-                uint256 freePtr = _getFreePtr();
++                // uint256 freePtr = _getFreePtr();
+                 bytes memory result = Exec.getReturnData(REVERT_REASON_MAX_LEN);
+                 if (result.length > 0) {
+                     emit UserOperationRevertReason(
+@@ -412,7 +412,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+                         result
+                     );
+                 }
+-                _restoreFreePtr(freePtr);
++                // _restoreFreePtr(freePtr);
+                 mode = IPaymaster.PostOpMode.opReverted;
+             }
+         }
+@@ -579,7 +579,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+         address sender = opInfo.mUserOp.sender;
+         bool success;
+         {
+-            uint256 saveFreePtr = _getFreePtr();
++            // uint256 saveFreePtr = _getFreePtr();
+             bytes memory callData = abi.encodeCall(IAccount.validateUserOp, (op, opInfo.userOpHash, missingAccountFunds));
+             assembly ("memory-safe"){
+                 success := call(gasLimit, sender, 0, add(callData, 0x20), mload(callData), 0, 32)
+@@ -589,7 +589,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+                     success := 0
+                 }
+             }
+-            _restoreFreePtr(saveFreePtr);
++            // _restoreFreePtr(saveFreePtr);
+         }
+         if (!success) {
+             if (sender.code.length == 0) {
+@@ -757,9 +757,9 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+         _copyUserOpToMemory(userOp, mUserOp);
+ 
+         // getUserOpHash uses temporary allocations, no required after it returns
+-        uint256 freePtr = _getFreePtr();
++        // uint256 freePtr = _getFreePtr();
+         outOpInfo.userOpHash = getUserOpHash(userOp);
+-        _restoreFreePtr(freePtr);
++        // _restoreFreePtr(freePtr);
+ 
+         // Validate all numeric values in userOp are well below 128 bit, so they can safely be added
+         // and multiplied without causing overflow.
+@@ -905,7 +905,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+      */
+     function _getOffsetOfMemoryBytes(
+         bytes memory data
+-    ) internal pure returns (uint256 offset) {
++    ) internal pure returns (bytes memory offset /* make analysis succeed, no-op */) {
+         assembly ("memory-safe") {
+             offset := data
+         }
+@@ -916,7 +916,7 @@ contract EntryPoint is IEntryPoint, StakeManager, NonceManager, ReentrancyGuardT
+      * @param offset - The offset to get the bytes from.
+      */
+     function _getMemoryBytesFromOffset(
+-        uint256 offset
++        bytes memory offset // make analysis succeed, no-op
+     ) internal pure returns (bytes memory data) {
+         assembly ("memory-safe") {
+             data := offset
